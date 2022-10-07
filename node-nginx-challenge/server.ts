@@ -1,7 +1,7 @@
 import express, { Response } from 'express'
-import { createConnection } from 'mysql2'
+import { createConnection, createPool, RowDataPacket } from 'mysql2'
 
-type UserProps = {
+type UserProps = RowDataPacket & {
   id: number
   name: string
 }
@@ -20,28 +20,35 @@ const mysqlConnectionConfig = {
 const sqlQueryInsert = "INSERT INTO users(name) values('paulo reis')"
 const sqlQuerySelect = 'SELECT * FROM users'
 
-app.get('/', (_, res: Response) => {
+app.get('/', async (_, res: Response) => {
   let formattedUserListHtml = ''
+
   const databaseConnection = createConnection(mysqlConnectionConfig)
+  const databasePool = createPool(mysqlConnectionConfig).promise()
 
-  databaseConnection.query(sqlQueryInsert)
+  try {
+    await databasePool.execute(sqlQueryInsert)
 
-  databaseConnection.query(sqlQuerySelect, (err, result: UserProps[]) => {
-    if (err) throw err
+    const [users] = await databasePool.execute<UserProps[]>(sqlQuerySelect)
 
-    result.forEach(user => {
-      console.log('formattedUserListHtml ==>', formattedUserListHtml)
-      console.log(`<li>${user.name}</li>`)
-
-      formattedUserListHtml = `${formattedUserListHtml} <li>${user.name}</li>`
+    users.forEach(user => {
+      formattedUserListHtml = formattedUserListHtml + `<li>${user.name}</li>`
     })
-  })
+  } catch (error) {
+    console.error(error)
 
-  databaseConnection.end()
+    return res.send(
+      '<p> <p>&lt;h1&gt;Error to get the users!&lt;/h1&gt;</p> </p>'
+    )
+  } finally {
+    databaseConnection.end()
+  }
 
-  res.send(
+  return res.send(
     `
       <p> <p>&lt;h1&gt;Full Cycle Rocks!&lt;/h1&gt;</p> </p>
+      <p> <p>&lt;h1&gt;Users List: &lt;/h1&gt;</p> </p>
+
       <ul>
         ${formattedUserListHtml}
       </ul>
