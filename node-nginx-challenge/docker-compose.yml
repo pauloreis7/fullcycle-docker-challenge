@@ -1,0 +1,21 @@
+version: '3'
+
+services:
+  mysql-db:
+    image: mysql:8.0
+    command: --innodb-use-native-aio=0
+    container_name: mysql-db
+    restart: always
+    tty: true
+    volumes:
+      - ./init:/docker-entrypoint-initdb.d
+      - ./mysql:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=nodedb
+      - MYSQL_ROOT_PASSWORD=root
+    networks:
+      - node-network
+
+networks:
+  node-network:
+    driver: bridge
