@@ -1,16 +1,32 @@
 version: '3'
 
 services:
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    image: pauloreis/nginx:prod
+    container_name: nginx
+    restart: unless-stopped
+    networks:
+      - node-network
+    ports:
+      - '8080:80'
+    depends_on:
+      - app
+
   app:
     build:
       context: .
       dockerfile: Dockerfile
+    image: pauloreis/node:prod
     container_name: app
+    restart: always
+    command: node server.js
+    entrypoint: dockerize -wait tcp://mysql-db:3306 -timeout 20s docker-entrypoint.sh
     networks:
       - node-network
     tty: true
-    ports:
-      - '8080:8080'
     depends_on:
       - mysql-db
 

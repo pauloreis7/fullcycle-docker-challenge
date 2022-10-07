@@ -41,9 +41,16 @@ ENV PATH /app/node_modules/.bin:$PATH
 ARG NODE_ENV=production
 ENV NODE_ENV $NODE_ENV
 
+ENV DOCKERIZE_VERSION v0.6.1
 RUN deluser --remove-home node \
   && addgroup -S node -g 1000 \
   && adduser -S -G node -u 999 node
+
+RUN apk add --no-cache openssl
+
+RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
+    && tar -C /usr/local/bin -xzvf dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
+    && rm dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz
 
 USER node
 
