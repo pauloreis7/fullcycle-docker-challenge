@@ -1,6 +1,19 @@
 version: '3'
 
 services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: app
+    networks:
+      - node-network
+    tty: true
+    ports:
+      - '8080:8080'
+    depends_on:
+      - mysql-db
+
   mysql-db:
     image: mysql:8.0
     command: --innodb-use-native-aio=0
